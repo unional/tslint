@@ -118,6 +118,7 @@
         "../src/test/utils.ts",
         "../src/tslint-cli.ts",
         "../src/tslint.ts",
+        "../src/utils.ts",
         "assert.ts",
         "eofLineRuleTests.ts",
         "lint.ts",
