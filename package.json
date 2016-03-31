@@ -39,8 +39,8 @@
     "grunt-tslint": "latest",
     "mocha": "^2.2.5",
     "tslint": "latest",
-    "tslint-config-typings": "0.0.2",
-    "tslint-config-unional": "0.1.1",
+    "tslint-config-typings": "0.1.6",
+    "tslint-config-unional": "0.1.5",
     "typescript": "latest"
   },
   "peerDependencies": {
