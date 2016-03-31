@@ -142,7 +142,7 @@ export function loadConfigurationFromPath(configFilePath: string): IConfiguratio
             configFileDir = path.resolve(`./node_modules/${configFilePath}`);
         }
 
-        configFile.rulesDirectory = getRulesDirectories(configFile.rulesDirectory, path.dirname(configFilePath));
+        configFile.rulesDirectory = getRulesDirectories(configFile.rulesDirectory, configFileDir);
         configFile.extends = arrayify(configFile.extends);
 
         for (const name of configFile.extends) {
