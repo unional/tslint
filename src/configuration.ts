@@ -22,6 +22,7 @@ import * as findup from "findup-sync";
 import {arrayify, objectify} from "./utils";
 
 export interface IConfigurationFile {
+    extends?: string | string[];
     rulesDirectory?: string | string[];
     rules?: any;
 }
@@ -60,7 +61,7 @@ export const DEFAULT_CONFIG = {
 };
 
 const PACKAGE_DEPRECATION_MSG = "Configuration of TSLint via package.json has been deprecated, "
-   + "please start using a tslint.json file instead (http://palantir.github.io/tslint/usage/tslint-json/).";
+    + "please start using a tslint.json file instead (http://palantir.github.io/tslint/usage/tslint-json/).";
 
 /**
  * Searches for a TSLint configuration and returns the data from the config.
@@ -128,14 +129,45 @@ export function loadConfigurationFromPath(configFilePath: string): IConfiguratio
         console.warn(PACKAGE_DEPRECATION_MSG);
         return require(configFilePath).tslintConfig;
     } else {
-        let fileData = fs.readFileSync(configFilePath, "utf8");
-        // remove BOM if present
-        fileData = fileData.replace(/^\uFEFF/, "");
-        const configFile: IConfigurationFile = JSON.parse(fileData);
+        let configFile: IConfigurationFile;
+        let configFileDir: string;
+        if (fs.existsSync(configFilePath)) {
+            let fileData = fs.readFileSync(configFilePath, "utf8");
+            // remove BOM if present
+            fileData = fileData.replace(/^\uFEFF/, "");
+            configFile = JSON.parse(fileData);
+            configFileDir = path.dirname(configFilePath);
+        } else {
+            configFile = require(configFilePath);
+            configFileDir = path.resolve(`./node_modules/${configFilePath}`);
+        }
+
         configFile.rulesDirectory = getRulesDirectories(configFile.rulesDirectory, path.dirname(configFilePath));
+        configFile.extends = arrayify(configFile.extends);
+
+        for (const name of configFile.extends) {
+            const baseConfigFilePath = resolveConfigurationPath(name, configFileDir);
+            const baseConfigFile = loadConfigurationFromPath(baseConfigFilePath);
+            configFile = extendConfigurationFile(configFile, baseConfigFile);
+        }
         return configFile;
     }
 }
+
+/**
+ * Resolve configuration file path
+ * @var relativeFilePath Relative path or package name (tslint-config-X) or package short name (X)
+ */
+function resolveConfigurationPath(relativeFilePath: string, relativeTo: string) {
+    let filePath = relativeFilePath;
+    if (relativeFilePath.indexOf(".") !== 0 && relativeFilePath.indexOf("tslint-config") === -1) {
+        filePath = `tslint-config-${relativeFilePath}`;
+    } else if (relativeFilePath.indexOf(".") === 0) {
+        filePath = getRelativePath(relativeFilePath, relativeTo);
+    }
+    return filePath;
+}
+
 
 export function extendConfigurationFile(config: IConfigurationFile, baseConfig: IConfigurationFile): IConfigurationFile {
     let combinedConfig: IConfigurationFile = {};

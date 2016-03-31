@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {IConfigurationFile, extendConfigurationFile} from "../src/configuration";
+import {IConfigurationFile, extendConfigurationFile, loadConfigurationFromPath} from "../src/configuration";
 
 describe("Configuration", () => {
     it("extendConfigurationFile", () => {
@@ -49,6 +49,52 @@ describe("Configuration", () => {
                 "c": 3,
             },
             rulesDirectory: ["foo", "bar", "baz"],
+        });
+    });
+
+    describe("loadConfigurationFromPath", () => {
+        it("extends with relative path", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-relative.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.isTrue(config.rules["no-fail"]);
+            assert.isFalse(config.rules["always-fail"]);
+        });
+        it("extends with package", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-package.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.isFalse(config.rules["always-fail"]);
+            assert.isTrue(Object.keys(config.rules).length > 1);
+        });
+        it("extends with package without customization", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-package-no-mod.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.isTrue(Object.keys(config.rules).length > 1);
+        });
+        it("extends with package shorthand", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-package-shorthand.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.isFalse(config.rules["always-fail"]);
+            assert.isTrue(Object.keys(config.rules).length > 1);
+        });
+        it("extends with package two levels (and relative path in rulesDirectory)", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-package-two-levels.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.lengthOf(config.rulesDirectory, 2);
+            assert.isFalse(config.rules["always-fail"]);
+            assert.isTrue(Object.keys(config.rules).length > 1);
+        });
+        it("extends with array", () => {
+            let config = loadConfigurationFromPath("./test/config/tslint-extends-package-array.json");
+
+            assert.isArray(config.rulesDirectory);
+            assert.isTrue(config.rules["no-fail"]);
+            assert.isFalse(config.rules["always-fail"]);
+            assert.isTrue(Object.keys(config.rules).length > 1);
         });
     });
 });
